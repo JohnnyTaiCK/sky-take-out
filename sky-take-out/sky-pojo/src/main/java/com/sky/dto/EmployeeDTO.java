@@ -1,10 +1,13 @@
 package com.sky.dto;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
 
 @Data
+@ApiModel(description = "员工传输对象")
 public class EmployeeDTO implements Serializable {
 
     private Long id;
@@ -17,6 +20,7 @@ public class EmployeeDTO implements Serializable {
 
     private String sex;
 
+    @ApiModelProperty("身份证号码")
     private String idNumber;
 
 }
