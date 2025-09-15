@@ -7,4 +7,26 @@
         insert into category (name, type, sort, status, create_user, update_user, create_time, update_time)
         values (#{name}, #{type}, #{sort}, #{status}, #{createUser}, #{updateUser}, #{createTime}, #{updateTime})
     </insert>
+
+    <select id="list" resultType="com.sky.entity.Category">
+        select * from category
+        where status = #{status}
+        <if test="type != null">
+            and type = #{type}
+        </if>
+        order by sort asc, create_time desc
+    </select>
+
+    <select id="pageQuery" resultType="com.sky.entity.Category">
+        select * from category
+        <where>
+            <if test="name != null">
+                and name like concat('%', #{name}, '%')
+            </if>
+            <if test="type != null">
+                and type = #{type}
+            </if>
+        </where>
+        order by sort asc, create_time desc
+    </select>
 </mapper>
