@@ -14,4 +14,10 @@ public interface CategoryService {
     List<Category> list(Integer type);
 
     PageResult pageQuery(CategoryPageQueryDTO categoryPageQueryDTO);
+
+    void updateStatus(Integer status, Long id);
+
+    void update(CategoryDTO categoryDTO);
+
+    void deleteById(Long id);
 }
