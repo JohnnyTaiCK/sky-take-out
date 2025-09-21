@@ -5,3 +5,5 @@ sky-take-out/sky-pojo/target
 sky-take-out/sky-server/target
 
 nginx-1.20.2/logs
+
+sky-take-out/sky-server/src/main/resources/application-dev.yml
