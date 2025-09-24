@@ -10,10 +10,11 @@
 
     <select id="list" resultType="com.sky.entity.Category">
         select * from category
-        where status = #{status}
-        <if test="type != null">
-            and type = #{type}
-        </if>
+        <where>
+            <if test="type != null">
+                and type = #{type}
+            </if>
+        </where>
         order by sort asc, create_time desc
     </select>
 

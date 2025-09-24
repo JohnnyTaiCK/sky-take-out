@@ -1,7 +1,5 @@
 package com.sky.controller.admin;
 
-
-import com.sky.constant.MessageConstant;
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.result.PageResult;
@@ -65,4 +63,21 @@ public class DishController {
         dishService.update(dishDTO);
         return Result.success();
     }
+
+    @PostMapping("/status/{status}")
+    @ApiOperation("启用禁用菜品")
+    public Result startOrStop(@PathVariable Integer status, Long id) {
+        log.info("启用禁用菜品：{}, {}", status, id);
+        dishService.startOrStop(status, id);
+        return Result.success();
+    }
+
+    @GetMapping("/list")
+    @ApiOperation("根据条件查询菜品")
+    public Result<List<DishVO>> list(Long categoryId) {
+        log.info("根据条件查询菜品：{}", categoryId);
+        List<DishVO> dishVOList = dishService.list(categoryId);
+        return Result.success(dishVOList);
+    }
+
 }
