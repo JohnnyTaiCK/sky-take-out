@@ -51,4 +51,11 @@ public interface DishMapper {
     @Select("select * from dish where category_id = #{categoryId} and status = #{status} order by create_time desc")
     List<DishVO> list(Long categoryId, Integer status);
 
+    /**
+     * 根据套餐id查询对应的菜品数据
+     * @param setmealId
+     * @return
+     */
+    @Select("select d.* from dish d left join setmeal_dish sd on d.id = sd.dish_id where sd.setmeal_id = #{setmealId}")
+    List<Dish> getDishesBySetmealId(Long setmealId);
 }
