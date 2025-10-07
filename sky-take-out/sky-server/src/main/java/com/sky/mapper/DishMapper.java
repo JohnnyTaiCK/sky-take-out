@@ -51,8 +51,8 @@ public interface DishMapper {
     @Select("select * from dish where category_id = #{categoryId} and status = #{status} order by create_time desc")
     List<DishVO> list(Long categoryId, Integer status);
 
-    @Select("select * from dish where id=#{id} order by create_time desc")
-    List<Dish> list(Dish dish);
+    @Select("select * from dish where category_id = #{categoryId} and status = '1' order by create_time desc")
+    List<Dish> listByEntity(Dish dish);
 
     /**
      * 根据套餐id查询对应的菜品数据
