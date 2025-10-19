@@ -40,4 +40,78 @@
         where id = #{id}
     </update>
 
+    <select id="pageQuery" resultType="Orders">
+        select * from orders
+        <where>
+            <if test="number != null">
+                and number = #{number}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <!-- 添加 phone 查询条件 -->
+            <if test="phone != null">
+                and phone = #{phone}
+            </if>
+            <!-- 修复 beginTime 查询条件 -->
+            <if test="beginTime != null and beginTime != ''">
+                and order_time >= #{beginTime}
+            </if>
+            <!-- 修复 endTime 查询条件 -->
+            <if test="endTime != null and endTime != ''">
+                and order_time &lt; #{endTime}
+            </if>
+            <!-- 添加 userId 查询条件 -->
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+        </where>
+        order by order_time desc
+    </select>
+
+    <select id="sumByMap" resultType="java.lang.Double">
+        select sum(amount) from orders
+        <where>
+            <if test="begin != null">
+                and order_time &gt; #{begin}
+            </if>
+            <if test="end != null">
+                and order_time &lt; #{end}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="countByMap" resultType="java.lang.Integer">
+        select count(id) from orders
+        <where>
+            <if test="begin != null">
+                and order_time &gt; #{begin}
+            </if>
+            <if test="end != null">
+                and order_time &lt; #{end}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="getSalesTop10" resultType="com.sky.dto.GoodsSalesDTO">
+        select od.name, sum(od.number) number
+        from orders o, order_detail od
+        where o.id = od.order_id and o.status=5
+        <if test="begin != null">
+            and o.order_time &gt; #{begin}
+        </if>
+        <if test="end != null">
+            and o.order_time &lt; #{end}
+        </if>
+        group by od.name
+        order by number desc
+        limit 0,10;
+    </select>
+
 </mapper>

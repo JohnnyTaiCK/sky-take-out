@@ -2,8 +2,11 @@ package com.sky.service.impl;
 
 
 import com.alibaba.fastjson.JSON;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
+import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.entity.AddressBook;
 import com.sky.entity.OrderDetail;
@@ -16,8 +19,10 @@ import com.sky.mapper.AddressBookMapper;
 import com.sky.mapper.OrderDetailMapper;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.ShoppingCartMapper;
+import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
 import com.sky.websocket.WebSocketServer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -128,5 +133,98 @@ public class OrderServiceImpl implements OrderService {
         map.put("content", "订单号" + orders.getNumber());
 
         webSocketServer.sendToAllClient(JSON.toJSONString(map));
+    }
+
+    @Override
+    public PageResult pageQuery(int pageNum, int pageSize, Integer status) {
+        PageHelper.startPage(pageNum, pageSize);
+
+        OrdersPageQueryDTO ordersPageQueryDTO = new OrdersPageQueryDTO();
+        ordersPageQueryDTO.setUserId(1L);
+        ordersPageQueryDTO.setStatus(status);
+
+        Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
+
+        List<OrderVO> records = new ArrayList();
+
+        // 查询出订单明细，并封装入OrderVO进行响应
+        if (page != null && page.getTotal() > 0) {
+            for (Orders orders : page) {
+                Long orderId = orders.getId();// 订单id
+
+                // 查询订单明细
+                List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orderId);
+
+                OrderVO orderVO = new OrderVO();
+                BeanUtils.copyProperties(orders, orderVO);
+                orderVO.setOrderDetailList(orderDetails);
+
+                records.add(orderVO);
+            }
+        }
+
+        return new PageResult(page.getTotal(), records);
+    }
+
+    @Override
+    public OrderVO details(Long orderId) {
+        OrderVO orderVO = new OrderVO();
+
+        Orders orders = orderMapper.getById(orderId);
+
+        BeanUtils.copyProperties(orders, orderVO);
+
+        List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orderId);
+        orderVO.setOrderDetailList(orderDetails);
+
+        return orderVO;
+    }
+
+    @Override
+    public void cancel(Long orderId) {
+        Orders ordersDB = orderMapper.getById(orderId);
+
+        if (ordersDB == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        if (ordersDB.getStatus() <= 2 || ordersDB.getStatus() >= 5) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        Orders orders = new Orders(); //in order to avoid updating other fields
+        orders.setId(ordersDB.getId());
+        orders.setStatus(Orders.CANCELLED);
+        orders.setCancelReason("用户取消");
+        orders.setCancelTime(LocalDateTime.now());
+
+        orderMapper.update(orders);
+    }
+
+    @Override
+    public void repetition(Long orderId) {
+        Orders orders = orderMapper.getById(orderId);
+
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orderId);
+        if (orderDetails == null || orderDetails.isEmpty()) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        //将原订单的订单明细数据重新添加到购物车
+        List<ShoppingCart> shoppingCarts = new ArrayList<>();
+        for (OrderDetail orderDetail : orderDetails) {
+            ShoppingCart shoppingCart = new ShoppingCart();
+
+            // 将原订单详情里面的菜品信息重新复制到购物车对象中
+            BeanUtils.copyProperties(orderDetail, shoppingCart, "id");
+            shoppingCart.setUserId(1L);
+            shoppingCart.setCreateTime(LocalDateTime.now());
+            shoppingCarts.add(shoppingCart);
+        }
+        shoppingCartMapper.insertBatch(shoppingCarts);
     }
 }
